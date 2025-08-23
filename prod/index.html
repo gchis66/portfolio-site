@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greg Chisholm | Cloud Architect</title>
+  <style>
+    /* ====== DESIGN TOKENS ====== */
+    :root {
+      --accent: #0e79b2;
+      --accent-light: #4fb0d9;
+      --bg: #f9fafb;
+      --text: #1f2937;
+      --shade: #e5e7eb;
+      --radius: 0.75rem;
+      --shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    /* ====== RESET ====== */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+    img{max-width:100%;display:block}
+    a{color:var(--accent);text-decoration:none}
+    h1,h2,h3{line-height:1.2;margin-bottom:.5em}
+
+    /* ====== LAYOUT ====== */
+    header{position:fixed;top:0;left:0;width:100%;background:#fff;border-bottom:1px solid var(--shade);box-shadow:var(--shadow);z-index:1000}
+    nav{max-width:960px;margin:auto;display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem}
+    nav ul{display:flex;gap:1.5rem;list-style:none}
+    nav a:hover{color:var(--accent-light)}
+
+    main{max-width:960px;margin:5.5rem auto 4rem;padding:0 1.25rem;}
+    .section{padding:3rem 0;border-bottom:1px solid var(--shade)}
+
+    /* ====== ABOUT ====== */
+    #about p{margin-bottom:1rem;font-size:1.1rem}
+
+    /* ====== CERTIFICATIONS ====== */
+    #cert ul{list-style:none;display:flex;flex-direction:row;align-items:center;gap:1rem;}
+
+    /* ====== PROJECTS ====== */
+    .projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;margin-top:1.5rem}
+    .project-card{background:#fff;border:1px solid var(--shade);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.75rem}
+    .project-card h3{margin:0;font-size:1.125rem}
+    .tech-stack{font-size:.9rem;color:#4b5563}
+    .btn{margin-top:auto;align-self:start;padding:.5rem 1rem;background:var(--accent);color:#fff;border-radius:var(--radius);font-size:.875rem}
+    .btn:hover{background:var(--accent-light)}
+
+    /* ====== BLOG ====== */
+    .posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;margin-top:1.5rem}
+    .post{border:1px solid var(--shade);background:#fff;border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow)}
+    .post time{font-size:.85rem;color:#4b5563}
+    .post p{margin:.5rem 0 1rem}
+
+    /* ====== LINKS ====== */
+    #links .link-list{display:flex;gap:1rem;margin-top:1rem}
+    .icon-link{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:1px solid var(--shade);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow);font-size:.875rem}
+
+    footer{margin-top:3rem;text-align:center;font-size:.9rem;color:#6b7280;padding-bottom:2rem}
+  
+    /* ====== COUNTER BADGE ====== */
+    .counter-badge{
+      display:inline-flex;align-items:center;gap:.35rem;
+      margin-left:.75rem;padding:.25rem .6rem;
+      border:1px solid var(--shade);border-radius:999px;background:#fff;
+      box-shadow:var(--shadow);font-size:.85rem;color:#4b5563;white-space:nowrap;
+    }
+    .counter-badge b{color:var(--text);font-weight:600}
+
+    /* ====== HAMBURGER MENU ====== */
+    .hamburger{
+      display:none;
+      flex-direction:column;
+      background:none;
+      border:none;
+      cursor:pointer;
+      padding:.5rem;
+      gap:.25rem;
+      z-index:1001;
+    }
+    .hamburger span{
+      width:1.5rem;
+      height:2px;
+      background:var(--text);
+      transition:all 0.3s ease;
+      transform-origin:center;
+    }
+    .hamburger.active span:nth-child(1){
+      transform:rotate(45deg) translate(3px, 6px);
+    }
+    .hamburger.active span:nth-child(2){
+      opacity:0;
+    }
+    .hamburger.active span:nth-child(3){
+      transform:rotate(-45deg) translate(3px, -6px);
+    }
+
+    /* ====== MOBILE NAVIGATION ====== */
+    @media (max-width: 768px) {
+      .hamburger{display:flex}
+      
+      nav ul{
+        position:fixed;
+        top:0;
+        right:-100%;
+        width:280px;
+        height:100vh;
+        background:#fff;
+        flex-direction:column;
+        align-items:flex-start;
+        padding:5rem 2rem 2rem;
+        gap:2rem;
+        box-shadow:-2px 0 10px rgba(0,0,0,0.1);
+        transition:right 0.3s ease;
+        z-index:1000;
+      }
+      
+      nav ul.active{right:0}
+      
+      nav ul li{width:100%}
+      
+      nav ul li a{
+        display:block;
+        padding:.75rem 0;
+        font-size:1.1rem;
+        border-bottom:1px solid var(--shade);
+      }
+    }
+
+    </style>
+</head>
+<body>
+  <!-- ====== NAVBAR ====== -->
+  <header>
+    <nav>
+      <strong>Greg Chisholm</strong><span id="viewCountBadge" class="counter-badge" title="Unique page views">👀 <b id="viewCount">—</b></span>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul id="navMenu">
+        <li><a href="#about">About</a></li>
+        <li><a href="#cert">Certifications</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#blog">Blog</a></li>
+        <li><a href="#links">Links</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ====== ABOUT ====== -->
+    <section id="about" class="section">
+      <h2>About Me</h2>
+      <p>Hello! I'm Greg Chisholm, a front-end dev turned cloud architect. I specialise in designing highly available, cost optimised solutions on AWS and love turning business problems into scalable serverless architectures. This site documents my journey and showcases the projects and learnings along the way.</p>
+    </section>
+
+    <!-- ====== CERTIFICATIONS ====== -->
+    <section id="cert" class="section">
+      <h2>Certifications</h2>
+      <ul>
+        <div data-iframe-width="200" data-iframe-height="320" data-share-badge-id="5c7fcc72-ac36-4913-b077-0885fbe42522" data-share-badge-host="https://www.credly.com"></div><script type="text/javascript" async src="//cdn.credly.com/assets/utilities/embed.js"></script>
+        <div data-iframe-width="200" data-iframe-height="320" data-share-badge-id="73e17ce8-cdd8-4dd4-981e-f50dbd0f3b94" data-share-badge-host="https://www.credly.com"></div><script type="text/javascript" async src="//cdn.credly.com/assets/utilities/embed.js"></script>
+        <!-- Add more here -->
+      </ul>
+    </section>
+
+    <!-- ====== PROJECTS ====== -->
+    <section id="projects" class="section">
+      <h2>Projects</h2>
+      <div class="projects-grid">
+        <div class="project-card">
+          <h3>DripCheck Virtual Try-On</h3>
+          <p class="tech-stack">AWS Lambda • S3 • API Gateway • Bedrock</p>
+          <p class="description">Shopify app that lets customers upload a photo and preview clothing items on their body in real time. Boosts conversion rates by 23% on average.</p>
+          <a href="https://apps.shopify.com/dripcheck" class="btn" target="_blank">View App</a>
+        </div>
+        <div class="project-card">
+          <h3>Cloud Resume Challenge</h3>
+          <p class="tech-stack">JavaScript • S3 • CloudFront • Route 53 • DynamoDB • API Gateway • IaC • CI/CD</p>
+          <p class="description">A personal website deployed and managed via AWS services. Challenge can be found <a href="https://cloudresumechallenge.dev/docs/the-challenge/aws/">here</a>.</p>
+          <a href="https://github.com/gchis66/cloud-resume-challenge" class="btn" target="_blank">View Repo</a>
+        </div>
+        <!-- Duplicate .project-card for more projects -->
+      </div>
+    </section>
+
+    <!-- ====== BLOG ====== -->
+    <section id="blog" class="section">
+      <h2>Blog</h2>
+      <div class="posts">
+        <article class="post">
+          <h3>Using AWS and AI to save thousands from a compromised crypto wallet</h3>
+          <time datetime="2025-08-6">6 Aug 2025</time>
+          <p>Turns out, AWS can also be used to save you from yourself.</p>
+          <a href="#">Read more →</a>
+        </article>
+        <article class="post">
+          <h3>How I lowered my Shopify app's AWS bill by 20%</h3>
+          <time datetime="2025-08-1">1 Aug 2025</time>
+          <p>Updating my app's architecture to reduce costs.</p>
+          <a href="#">Read more →</a>
+        </article>
+        <article class="post">
+          <h3>Putting theory into practice with the AWS Cloud Resume Challenge</h3>
+          <time datetime="2025-07-15">15 Jul 2025</time>
+          <p>Finally taking the plunge and putting my AWS knowledge to the test.</p>
+          <a href="#">Read more →</a>
+        </article>
+        <!-- Add more posts as needed -->
+      </div>
+    </section>
+
+    <!-- ====== LINKS ====== -->
+    <section id="links" class="section">
+      <h2>Links &amp; Contact</h2>
+      <div class="link-list">
+        <a href="https://github.com/gchis66" class="icon-link" target="_blank">GitHub</a>
+        <a href="https://www.linkedin.com/in/gregory-chisholm1/" class="icon-link" target="_blank">LinkedIn</a>
+        <a href="/gregresume.pdf" class="icon-link" target="_blank">Resume (PDF)</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 Greg Chisholm. Built with HTML, CSS & a pinch of JS.
+  </footer>
+
+  
+  <!-- ====== COUNTER + ENHANCEMENTS ====== -->
+  <script>
+    // Set your API Gateway invoke URL here (e.g., https://abc123.execute-api.us-east-1.amazonaws.com/count)
+    const CRC_API_URL = "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/count";
+
+    async function updateViewCounter() {
+      const el = document.getElementById("viewCount");
+      if (!el) return;
+      try {
+        const res = await fetch(CRC_API_URL, { method: "GET", mode: "cors" });
+        if (!res.ok) throw new Error("Non-200 from API");
+        const data = await res.json();
+        const n = (data && typeof data.count !== 'undefined') ? data.count : null;
+        el.textContent = n === null ? "—" : n.toLocaleString();
+      } catch (err) {
+        console.error("Counter error:", err);
+        el.textContent = "—";
+      }
+    }
+
+    // Hamburger menu functionality
+    function initHamburgerMenu() {
+      const hamburger = document.getElementById("hamburger");
+      const navMenu = document.getElementById("navMenu");
+      
+      if (!hamburger || !navMenu) return;
+      
+      hamburger.addEventListener("click", () => {
+        hamburger.classList.toggle("active");
+        navMenu.classList.toggle("active");
+      });
+      
+      // Close menu when clicking on a nav link
+      navMenu.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", () => {
+          hamburger.classList.remove("active");
+          navMenu.classList.remove("active");
+        });
+      });
+      
+      // Close menu when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+          hamburger.classList.remove("active");
+          navMenu.classList.remove("active");
+        }
+      });
+    }
+
+    // Smooth scrolling handled by CSS; initialize counter and hamburger menu on DOM ready
+    document.addEventListener("DOMContentLoaded", () => {
+      updateViewCounter();
+      initHamburgerMenu();
+    });
+  </script>
+
+</body>
+</html>

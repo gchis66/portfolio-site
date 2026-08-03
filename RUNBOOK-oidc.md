@@ -3,7 +3,7 @@
 **Target:** `gchis66/portfolio-site` → AWS account (us-east-1)
 **Removes:** `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` GitHub secrets + the IAM user behind them
 **Time:** ~45 min
-**Prereq:** ⚠️ Commit the real `lambda/index.js` first — see §0
+**Prereqs:** ⚠️ §0 (commit real `lambda/index.js`) and ⚠️ §0b (stop the deploy deleting your resume) — both before anything else
 
 ---
 
@@ -17,6 +17,67 @@
 2. **Actions → Export function → Download deployment package**
 3. Unzip, copy the real source into `PortfolioSite/lambda/`
 4. Commit it (this push touches `lambda/**`, so the old workflow will run and redeploy identical code — harmless, and it proves the pipeline still works before you change auth)
+
+**Status: ✔ done (29 Jul 2026)**
+
+---
+
+## 0b. PREREQ — the deploy is deleting your resume
+
+### The bug
+
+`deploy-website.yml`:
+
+```
+aws s3 sync --delete ./prod s3://gregorychisholm.com
+```
+
+`--delete` makes the bucket an **exact mirror** of `./prod`. Any object present in the bucket but absent from `./prod` is deleted on every deploy.
+
+`./prod` contains **only `index.html`**. So every push to `main` deletes:
+- `Gregory_Chisholm_Resume.pdf` — which `index.html` links to as `/Gregory_Chisholm_Resume.pdf`
+- any other hand-uploaded object (favicon, error page, images, old assets)
+
+Net effect: the **Resume (PDF)** button on the live site is broken from the moment a deploy runs until the file is manually re-uploaded. It is broken right now for anyone who visits after the last deploy.
+
+### Fix — commit the resume into the repo (recommended)
+
+Make the repo the single source of truth for everything the bucket serves. This is the correct fix, not a workaround: right now your production bucket holds state that exists nowhere else, which means a deploy can destroy content you can't restore from version control.
+
+1. Put the current resume PDF at `PortfolioSite/prod/Gregory_Chisholm_Resume.pdf`
+   - If the bucket copy is the only copy, download it from S3 first: bucket → object → **Download**
+2. **Audit the bucket for other orphans** before the next deploy — anything listed in S3 but not in `prod/` will be destroyed:
+   - Console → S3 → `gregorychisholm.com` → review every object
+   - Common finds: `favicon.ico`, `error.html`, `robots.txt`, `404.html`, images, old `assets/`
+   - Copy each into `prod/`, preserving the same key path (an object at `assets/img/x.png` goes to `prod/assets/img/x.png`)
+3. Commit them. `git status` should show the PDF plus any recovered files.
+4. Deploy and verify `https://gregorychisholm.com/Gregory_Chisholm_Resume.pdf` still loads.
+
+**Why this over `--exclude`:** you *want* `--delete`, because it's what removes files you intentionally delete from the repo. Excluding the PDF would keep the bug alive in a quieter form — an untracked production asset that no one can restore. Commit it and the problem is structurally gone.
+
+Also: this is the same reason the DripCheck case study and the new `/talk` page must live in `prod/`. Anything not in `prod/` does not survive a deploy.
+
+### Alternative — if you refuse to version the PDF
+
+If you'd rather keep the resume out of git (e.g. you update it often and don't want the churn):
+
+```yaml
+      - name: Sync to S3
+        run: |
+          aws s3 sync --delete ./prod s3://gregorychisholm.com \
+            --exclude "Gregory_Chisholm_Resume.pdf"
+```
+
+`--exclude` applies to both sides of the comparison, so the object is left untouched in the bucket. Downside: that file now exists only in S3, with no version history and no local copy. If you take this route, **enable S3 versioning on the bucket** so a mistaken delete is recoverable.
+
+### Verify after either fix
+
+```
+# should return 200 and application/pdf
+curl -sI https://gregorychisholm.com/Gregory_Chisholm_Resume.pdf | head -3
+```
+
+Do this once *before* the OIDC migration and once after, so you know a later failure came from the auth change and not from this.
 
 ---
 

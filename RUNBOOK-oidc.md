@@ -57,6 +57,8 @@ Make the repo the single source of truth for everything the bucket serves. This 
 
 Also: this is the same reason the DripCheck case study and the new `/talk` page must live in `prod/`. Anything not in `prod/` does not survive a deploy.
 
+**Status: ✔ done (29 Jul 2026)**
+
 ### Alternative — if you refuse to version the PDF
 
 If you'd rather keep the resume out of git (e.g. you update it often and don't want the churn):
@@ -106,13 +108,15 @@ Write them down; you'll paste them repeatedly.
 
 | Value | Where to find it | Yours |
 |---|---|---|
-| AWS Account ID | Console top-right account menu (12 digits) | `____________` |
+| AWS Account ID | Console top-right account menu (12 digits) | **671175724628** |
 | Region | `us-east-1` (matches your API Gateway URL) | `us-east-1` |
 | S3 bucket | `gregorychisholm.com` | ✔ |
-| CloudFront distribution ID | GitHub → repo → Settings → Secrets → `DISTRIBUTION_ID`, or CloudFront console | `____________` |
+| CloudFront distribution ID | CloudFront console → Distributions → ID column. **Not readable from GitHub** — secrets are write-only | **E3I3BUXWGYS0OG** |
 | Lambda function name | `VisitorCountFunc` | ✔ |
 | GitHub repo | `gchis66/portfolio-site` | ✔ |
 | Branch | `main` | ✔ |
+
+**Note on existing identity providers:** this account already has `AWSSSO_6d506f25137a3b66_DO_NOT_DELETE` (type **SAML**), created by IAM Identity Center for console sign-in. It is unrelated to GitHub OIDC — different protocol, different purpose. **Do not delete or modify it.** You need to add a separate provider of type **OpenID Connect**; the two coexist without interacting.
 
 ---
 
@@ -129,11 +133,13 @@ Once per AWS account. If you've done this before, skip to §4.
 
 Verify it appears as `token.actions.githubusercontent.com`.
 
+**Status: ✔ done (29 Jul 2026)**
+
 ---
 
 ## 4. Create the IAM policy (least privilege)
 
-IAM → **Policies** → **Create policy** → **JSON** tab. Replace the editor contents with the following, substituting `YOUR_ACCOUNT_ID` and `YOUR_DISTRIBUTION_ID`:
+IAM → **Policies** → **Create policy** → **JSON** tab. Replace the editor contents with the following, substituting `671175724628` and `E3I3BUXWGYS0OG`:
 
 ```json
 {
@@ -159,13 +165,13 @@ IAM → **Policies** → **Create policy** → **JSON** tab. Replace the editor 
       "Sid": "InvalidateCache",
       "Effect": "Allow",
       "Action": "cloudfront:CreateInvalidation",
-      "Resource": "arn:aws:cloudfront::YOUR_ACCOUNT_ID:distribution/YOUR_DISTRIBUTION_ID"
+      "Resource": "arn:aws:cloudfront::671175724628:distribution/E3I3BUXWGYS0OG"
     },
     {
       "Sid": "UpdateCounterLambda",
       "Effect": "Allow",
       "Action": "lambda:UpdateFunctionCode",
-      "Resource": "arn:aws:lambda:us-east-1:YOUR_ACCOUNT_ID:function:VisitorCountFunc"
+      "Resource": "arn:aws:lambda:us-east-1:671175724628:function:VisitorCountFunc"
     }
   ]
 }
@@ -201,7 +207,7 @@ Then **verify the trust policy** — the console's branch field sometimes produc
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::YOUR_ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+        "Federated": "arn:aws:iam::671175724628:oidc-provider/token.actions.githubusercontent.com"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
@@ -218,7 +224,7 @@ Then **verify the trust policy** — the console's branch field sometimes produc
 **Both conditions are mandatory.** Missing `sub` means *any* GitHub repository on the internet can assume your role. Missing `aud` weakens token-confusion protection. If the console generated `StringLike` with a `*`, replace it with the exact `StringEquals` above.
 
 Copy the **Role ARN** from the summary page:
-`arn:aws:iam::YOUR_ACCOUNT_ID:role/GitHubActions-PortfolioSite-Deploy`
+`arn:aws:iam::671175724628:role/GitHubActions-PortfolioSite-Deploy`
 
 ### Why one role and not two
 
@@ -226,12 +232,30 @@ Both workflows run from the same repo and branch, so their trust conditions woul
 
 ---
 
-## 6. Update the workflows
+## 6. Update the workflow
 
-### `deploy-website.yml`
+### ⚠️ Which file — read this first
+
+The repo contains **three** workflow-looking files. Only one of them runs:
+
+| File | Runs? |
+|---|---|
+| `.github/workflows/deploy-website.yml` | ✅ **YES** — this is the live pipeline |
+| `deploy-website.yml` (repo root) | ❌ No — dead leftover, GitHub ignores it |
+| `deploy-lambda.yml` (repo root) | ❌ No — dead leftover, GitHub ignores it |
+
+GitHub Actions **only** executes workflows located in `.github/workflows/`. Files in the repo root are inert regardless of their contents.
+
+The live file is **one workflow with two jobs** (`deploy-website` and `deploy-lambda`), so there are **two** `Configure AWS Credentials` steps to convert. The Lambda job detects changes with `git diff HEAD~1 HEAD` rather than a `paths:` trigger, which is why it needs `fetch-depth: 2`.
+
+**Also delete the two root-level files** in this same commit. Leaving stale copies containing `secrets.AWS_ACCESS_KEY_ID` next to a hardened pipeline is misleading to anyone reviewing the repo — including you in six months, and including a hiring manager who clones it.
+
+### The file: `.github/workflows/deploy-website.yml`
+
+Already written to disk. Full contents:
 
 ```yaml
-name: Deploy Website to S3
+name: Deploy Website and Lambda
 on:
   push:
     branches: [ main ]
@@ -241,7 +265,7 @@ permissions:
   contents: read       # REQUIRED — for actions/checkout
 
 jobs:
-  deploy:
+  deploy-website:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -250,7 +274,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/GitHubActions-PortfolioSite-Deploy
+          role-to-assume: arn:aws:iam::671175724628:role/GitHubActions-PortfolioSite-Deploy
           role-session-name: gha-deploy-website
           aws-region: us-east-1
 
@@ -259,52 +283,55 @@ jobs:
 
       - name: Invalidate CloudFront Cache
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.DISTRIBUTION_ID }} --paths "/*"
-```
 
-### `deploy-lambda.yml`
-
-```yaml
-name: Deploy Lambda Function
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'lambda/**'
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  deploy:
+  deploy-lambda:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Needed to check for file changes
+
+      - name: Check for Lambda changes
+        id: lambda-changes
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q "^lambda/"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Configure AWS Credentials
+        if: steps.lambda-changes.outputs.changed == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/GitHubActions-PortfolioSite-Deploy
+          role-to-assume: arn:aws:iam::671175724628:role/GitHubActions-PortfolioSite-Deploy
           role-session-name: gha-deploy-lambda
           aws-region: us-east-1
 
       - name: Zip Lambda code
+        if: steps.lambda-changes.outputs.changed == 'true'
         run: |
           cd lambda
           zip -r function.zip . -x "*.git*"
 
       - name: Update Lambda Function
+        if: steps.lambda-changes.outputs.changed == 'true'
         run: aws lambda update-function-code --function-name VisitorCountFunc --zip-file fileb://lambda/function.zip
 ```
 
-**Changes:** the three `aws-access-key-id` / `aws-secret-access-key` / `aws-region: ${{ secrets.AWS_REGION }}` lines are replaced by `role-to-assume` + `role-session-name` + a literal region. The `permissions:` block is new and **the workflow fails without it** — this is the most common OIDC setup mistake.
+### What changed
 
-Region is now hardcoded rather than a secret. A region name isn't sensitive and having it inline makes the workflow self-documenting.
+1. **Added the `permissions:` block** at workflow level. Without `id-token: write` the runner cannot request an OIDC token and the credentials step fails. This is the single most common OIDC setup mistake. Declared once at the top so it covers both jobs.
+2. **Both** `Configure AWS Credentials` steps: the three lines `aws-access-key-id` / `aws-secret-access-key` / `aws-region: ${{ secrets.AWS_REGION }}` are replaced by `role-to-assume` + `role-session-name` + a literal `aws-region: us-east-1`.
+3. **Distinct `role-session-name` per job** (`gha-deploy-website` / `gha-deploy-lambda`). This is what appears in CloudTrail, so you can tell which job did what.
+4. Region is now inline rather than a secret. A region name isn't sensitive, and inlining makes the workflow self-documenting.
 
-`role-session-name` is what shows up in CloudTrail. Different values per workflow means you can tell which pipeline did what.
+`DISTRIBUTION_ID` remains a secret and is still referenced — do not delete that one.
 
----
+### Optional cleanup
+
+The distribution ID (`E3I3BUXWGYS0OG`) isn't sensitive — it's discoverable from a DNS lookup of the site. You could inline it and drop the `DISTRIBUTION_ID` secret entirely, leaving zero write-only secrets in the repo. Your call.
 
 ## 7. Test
 

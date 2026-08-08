@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DripCheck Fashion Try-On | Case Study | Greg Chisholm</title>
+  <meta name="description" content="Case study: building, pricing, and sunsetting an AI virtual try-on app on the Shopify App Store, and cutting its AWS bill by 99%." />
+  <style>
+    :root{--accent:#0e79b2;--accent-light:#4fb0d9;--bg:#f9fafb;--text:#1f2937;--muted:#4b5563;--shade:#e5e7eb;--radius:.75rem;--shadow:0 2px 6px rgba(0,0,0,.05)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+    a{color:var(--accent);text-decoration:none}
+    h1,h2{line-height:1.2;margin-bottom:.5em}
+    main{max-width:760px;margin:3rem auto 4rem;padding:0 1.25rem}
+    .back{font-size:.9rem;color:var(--muted)}
+    .pill{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.2rem .55rem;border-radius:999px;background:var(--shade);color:var(--muted);vertical-align:middle}
+    .meta{font-size:.9rem;color:var(--muted);margin-bottom:1.5rem}
+    .card{background:#fff;border:1px solid var(--shade);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);margin:1.5rem 0}
+    .card h2{font-size:1.1rem;margin-bottom:.5rem}
+    .placeholder{border:2px dashed var(--shade);border-radius:var(--radius);padding:3rem 1.5rem;text-align:center;color:var(--muted);font-size:.9rem;background:#fff;margin:1.5rem 0}
+    .video{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--shade);background:#000;margin:1.5rem 0 .5rem}
+    .video iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+    .caption{font-size:.85rem;color:var(--muted);text-align:center;margin-bottom:1.5rem}
+    .diagram{background:#fff;border:1px solid var(--shade);border-radius:var(--radius);padding:.75rem;box-shadow:var(--shadow);margin:1rem 0 .5rem;overflow-x:auto}
+    .diagram img{width:100%;min-width:640px;height:auto;display:block}
+    ul{margin:.5rem 0 0 1.25rem;color:var(--muted);font-size:.95rem}
+    li{padding:.15rem 0}
+    p{margin-bottom:1rem}
+    .stat-row{display:flex;flex-wrap:wrap;gap:1rem;margin:1.5rem 0}
+    .stat{flex:1 1 150px;background:#fff;border:1px solid var(--shade);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow)}
+    .stat b{display:block;font-size:1.5rem;color:var(--accent)}
+    .stat span{font-size:.8rem;color:var(--muted)}
+    footer{text-align:center;font-size:.9rem;color:#6b7280;padding:2rem 0}
+  </style>
+</head>
+<body>
+  <main>
+    <p class="back"><a href="/">← Back to gregorychisholm.com</a></p>
+    <h1>DripCheck Fashion Try-On <span class="pill">Sunset</span></h1>
+    <p class="meta">Published on the Shopify App Store, March 2025. Sunset 2026. Sole engineer.</p>
+
+    <p>DripCheck let shoppers upload a photo and see themselves wearing a store's clothing before buying. Customers submitted an image, the app generated a try-on preview, and merchants could style the button, cap monthly usage, and track try-on volume against conversions.</p>
+
+    <div class="stat-row">
+      <div class="stat"><b>99%</b><span>AWS cost reduction after re-architecture</span></div>
+      <div class="stat"><b>$9.99</b><span>per month, 50 try-ons included</span></div>
+      <div class="stat"><b>1</b><span>engineer, end to end</span></div>
+    </div>
+
+    <div class="video">
+      <iframe src="https://www.youtube-nocookie.com/embed/zxCVjDxs2TU" title="DripCheck Virtual Fashion Try-On demo" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+    <p class="caption">The two-step shopper flow: upload a photo, see the garment on yourself.</p>
+
+    <div class="card">
+      <h2>Architecture</h2>
+      <p>Serverless on AWS: Lambda behind API Gateway, S3 for image storage, DynamoDB for per-store usage metering and quota enforcement, and the HeyBeauty generative try-on API for image synthesis. Asynchronous generation so the storefront never blocked on inference.</p>
+      <div class="diagram">
+        <img src="/dripcheck/architecture.svg" alt="DripCheck architecture: a shopper on a Shopify storefront requests a try-on through API Gateway to a Lambda orchestrator, which calls the HeyBeauty API, stores images in S3, and meters usage in DynamoDB. Merchants read analytics through the same gateway and overage is charged via the Shopify Billing API." />
+      </div>
+      <p class="caption" style="margin-bottom:0">Try-on requests in blue; merchant admin and billing in grey.</p>
+    </div>
+
+    <div class="card">
+      <h2>The 99% cost cut</h2>
+      <p style="margin-bottom:0">The original pipeline had a cost structure that could not support the price point. Re-architecting image handling and storage cut the AWS bill by 99% and turned per-transaction margin positive. <a href="https://medium.com/@gchis66/how-i-lowered-my-shopify-apps-aws-bill-by-over-90-16ba159132ac" target="_blank" rel="noopener">Full writeup on Medium →</a></p>
+    </div>
+
+    <div class="card">
+      <h2>Unit economics</h2>
+      <p style="margin-bottom:0">Pricing was modeled against the per-inference API cost rather than guessed: $9.99/month including 50 try-ons, then $0.13 per additional try-on, with merchant-configurable caps so a viral product page could not produce a surprise bill on either side.</p>
+    </div>
+
+    <div class="card">
+      <h2>Shipping it</h2>
+      <p style="margin-bottom:0">Passing Shopify App Store review meant a working OAuth install flow, the mandatory GDPR compliance webhooks, Billing API integration, and meeting embedded-app requirements.</p>
+    </div>
+
+    <div class="card">
+      <h2>Why I shut it down</h2>
+      <p>It topped out at two paying merchants. The hard lesson: distribution is hard.</p>
+      <p style="margin-bottom:0">Then image models such as Gemini's nano banana model commoditized the core feature. When a general purpose model can do virtual try-on well with no integration work, a single purpose try-on app has no moat left. I shut it down rather than keep funding it.</p>
+    </div>
+
+    <p class="back"><a href="/">← Back to gregorychisholm.com</a></p>
+  </main>
+  <footer>© 2026 Greg Chisholm</footer>
+</body>
+</html>

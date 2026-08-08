@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Greg Chisholm | Cloud Engineer | AWS | Terraform | CI/CD</title>
+  <title>Greg Chisholm | AI Agent &amp; Cloud Automation Engineer | AWS</title>
+  <meta name="description" content="Greg Chisholm builds AI agents and workflow automation that survive production, deployed on AWS with least-privilege IAM, managed secrets, cost guardrails, and defenses against prompt injection. AWS certified. Open to remote roles and contract work." />
+  <link rel="canonical" href="https://gregorychisholm.com/" />
   <style>
     /* ====== DESIGN TOKENS ====== */
     :root {
@@ -11,6 +13,7 @@
       --accent-light: #4fb0d9;
       --bg: #f9fafb;
       --text: #1f2937;
+      --muted: #4b5563;
       --shade: #e5e7eb;
       --radius: 0.75rem;
       --shadow: 0 2px 6px rgba(0,0,0,0.05);
@@ -35,36 +38,84 @@
 
     /* ====== ABOUT ====== */
     #about p{margin-bottom:1rem;font-size:1.1rem}
+    #about .lede{font-size:1.25rem}
+
+    /* ====== AVAILABILITY BANNER ====== */
+    .availability{
+      display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;
+      margin-top:1.5rem;padding:1rem 1.25rem;
+      background:#fff;border:1px solid var(--shade);border-left:4px solid var(--accent);
+      border-radius:var(--radius);box-shadow:var(--shadow);
+    }
+    .availability p{margin:0;font-size:1rem}
+    .availability .dot{
+      width:.6rem;height:.6rem;border-radius:50%;background:#10b981;
+      flex:0 0 auto;box-shadow:0 0 0 3px rgba(16,185,129,.2);
+    }
+    .availability a{font-weight:600;white-space:nowrap}
+
+    /* ====== SERVICES ====== */
+    .services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-top:1.5rem}
+    .service-card{background:#fff;border:1px solid var(--shade);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow)}
+    .service-card h3{font-size:1.05rem;margin-bottom:.4rem}
+    .service-card p{font-size:.95rem;color:var(--muted);margin-bottom:.75rem}
+    .service-card ul{list-style:none;font-size:.85rem;color:var(--muted)}
+    .service-card ul li{padding:.15rem 0}
+    .service-card ul li::before{content:"▸ ";color:var(--accent)}
 
     /* ====== CERTIFICATIONS ====== */
-    #cert ul{list-style:none;display:flex;flex-direction:row;align-items:center;gap:1rem;}
+    #cert ul{list-style:none;display:flex;flex-direction:row;align-items:center;gap:1rem;flex-wrap:wrap}
 
     /* ====== PROJECTS ====== */
-    .projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;margin-top:1.5rem}
+    .projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:1.5rem;margin-top:1.5rem}
     .project-card{background:#fff;border:1px solid var(--shade);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.75rem}
     .project-card h3{margin:0;font-size:1.125rem}
-    .tech-stack{font-size:.9rem;color:#4b5563}
+    .tech-stack{font-size:.9rem;color:var(--muted)}
     .btn{margin-top:auto;align-self:start;padding:.5rem 1rem;background:var(--accent);color:#fff;border-radius:var(--radius);font-size:.875rem}
     .btn:hover{background:var(--accent-light)}
+    .btn-secondary{background:#fff;color:var(--accent);border:1px solid var(--shade)}
+    .btn-secondary:hover{background:var(--bg);color:var(--accent-light)}
+    .btn.disabled{background:var(--shade);color:#9ca3af;cursor:not-allowed;pointer-events:none}
+    .card-actions{margin-top:auto;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+    .card-actions .btn{margin-top:0}
+
+    /* featured project */
+    .project-card.featured{
+      grid-column:1 / -1;
+      border:1px solid var(--accent-light);
+      border-top:4px solid var(--accent);
+      background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+    }
+    .project-card.featured h3{font-size:1.4rem}
+
+    /* status pills */
+    .pill{
+      display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.04em;
+      text-transform:uppercase;padding:.2rem .55rem;border-radius:999px;vertical-align:middle;
+    }
+    .pill-build{background:#fef3c7;color:#92400e}
+    .pill-live{background:#d1fae5;color:#065f46}
+    .pill-sunset{background:var(--shade);color:var(--muted)}
 
     /* ====== BLOG ====== */
     .posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;margin-top:1.5rem}
     .post{border:1px solid var(--shade);background:#fff;border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow)}
-    .post time{font-size:.85rem;color:#4b5563}
+    .post h3{font-size:1.05rem}
+    .post time{font-size:.85rem;color:var(--muted)}
     .post p{margin:.5rem 0 1rem}
 
     /* ====== LINKS ====== */
-    #links .link-list{display:flex;gap:1rem;margin-top:1rem}
+    #links .link-list{display:flex;flex-wrap:wrap;gap:1rem;margin-top:1rem}
     .icon-link{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:1px solid var(--shade);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow);font-size:.875rem}
 
     footer{margin-top:3rem;text-align:center;font-size:.9rem;color:#6b7280;padding-bottom:2rem}
-  
+
     /* ====== COUNTER BADGE ====== */
     .counter-badge{
       display:inline-flex;align-items:center;gap:.35rem;
       margin-left:.75rem;padding:.25rem .6rem;
       border:1px solid var(--shade);border-radius:999px;background:#fff;
-      box-shadow:var(--shadow);font-size:.85rem;color:#4b5563;white-space:nowrap;
+      box-shadow:var(--shadow);font-size:.85rem;color:var(--muted);white-space:nowrap;
     }
     .counter-badge b{color:var(--text);font-weight:600}
 
@@ -99,7 +150,7 @@
     /* ====== MOBILE NAVIGATION ====== */
     @media (max-width: 768px) {
       .hamburger{display:flex}
-      
+
       nav ul{
         position:fixed;
         top:0;
@@ -114,12 +165,13 @@
         box-shadow:-2px 0 10px rgba(0,0,0,0.1);
         transition:right 0.3s ease;
         z-index:1000;
+        overflow-y:auto;
       }
-      
+
       nav ul.active{right:0}
-      
+
       nav ul li{width:100%}
-      
+
       nav ul li a{
         display:block;
         padding:.75rem 0;
@@ -134,7 +186,7 @@
   <!-- ====== NAVBAR ====== -->
   <header>
     <nav>
-      <strong>Greg Chisholm</strong><span id="viewCountBadge" class="counter-badge" title="Unique page views">👀 <b id="viewCount">—</b></span>
+      <strong>Greg Chisholm</strong><span id="viewCountBadge" class="counter-badge" title="Unique page views">👀 <b id="viewCount">...</b></span>
       <button class="hamburger" id="hamburger" aria-label="Toggle menu">
         <span></span>
         <span></span>
@@ -142,6 +194,7 @@
       </button>
       <ul id="navMenu">
         <li><a href="#about">About</a></li>
+        <li><a href="#services">What I Do</a></li>
         <li><a href="#cert">Certifications</a></li>
         <li><a href="#projects">Projects</a></li>
         <li><a href="#blog">Blog</a></li>
@@ -154,9 +207,51 @@
     <!-- ====== ABOUT ====== -->
     <section id="about" class="section">
       <h2>About Me</h2>
-      <p>Hey, I'm Greg Chisholm. I’m a software engineer with 7+ years of experience building production web applications, and I’m now focused on cloud infrastructure and automation.</p>
-      <p>My recent work has centered on AWS, AI, Terraform, serverless architecture, and CI/CD, with an emphasis on scalable, practical, and cost-efficient systems.</p>
-      <p>I’m especially interested in cloud engineering, infrastructure, and platform-focused roles.</p>
+      <p class="lede">I build AI agents and workflow automation that survive production, deployed on AWS with least privilege IAM, managed secrets, cost guardrails, and defenses against prompt injection.</p>
+      <p>Eight years shipping production web applications, now applied to agent infrastructure. Most agent demos work; the hard part is making one survive real users, real costs, and real adversarial input.</p>
+
+      <div class="availability">
+        <span class="dot" aria-hidden="true"></span>
+        <p><strong>Available for contract work:</strong> agent builds, workflow automation, AWS deployment &amp; hardening. Also open to full-time remote roles.</p>
+        <a href="mailto:gchis66@gmail.com?subject=Project%20inquiry">Email me →</a>
+      </div>
+    </section>
+
+    <!-- ====== SERVICES ====== -->
+    <section id="services" class="section">
+      <h2>What I Do</h2>
+      <div class="services-grid">
+        <div class="service-card">
+          <h3>AI Agents &amp; Workflow Automation</h3>
+          <p>Agents that take real actions against real systems, with human-in-the-loop gates and audit trails.</p>
+          <ul>
+            <li>Tool-calling &amp; multi-step agents</li>
+            <li>Voice &amp; conversational interfaces</li>
+            <li>Retrieval grounded on your data</li>
+            <li>MCP integrations</li>
+          </ul>
+        </div>
+        <div class="service-card">
+          <h3>Cloud Deployment &amp; IaC</h3>
+          <p>Serverless architecture and repeatable pipelines on AWS, provisioned as code.</p>
+          <ul>
+            <li>Lambda, API Gateway, DynamoDB, S3</li>
+            <li>Terraform</li>
+            <li>CI/CD with GitHub Actions</li>
+            <li>CloudFront &amp; static hosting</li>
+          </ul>
+        </div>
+        <div class="service-card">
+          <h3>Security Hardening &amp; Cost Optimization</h3>
+          <p>Closing the gaps that ship by default, and finding the spend nobody is watching.</p>
+          <ul>
+            <li>OIDC federation, no static keys</li>
+            <li>Least-privilege IAM</li>
+            <li>Security headers &amp; CSP</li>
+            <li>Cost guardrails &amp; budget alarms</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <!-- ====== CERTIFICATIONS ====== -->
@@ -175,25 +270,61 @@
     <section id="projects" class="section">
       <h2>Projects</h2>
       <div class="projects-grid">
-        <div class="project-card">
-          <h3>DripCheck Virtual Try-On</h3>
-          <p class="tech-stack">AWS Lambda • Node.js • API Gateway • HeyBeauty API</p>
-          <p class="description">Shopify app that lets customers upload a photo and preview clothing items on their body in real time. Boosts conversion rates by 23% on average.</p>
-          <a href="https://apps.shopify.com/dripcheck" class="btn" target="_blank">View App</a>
+
+        <!-- FLAGSHIP: voice agent (in progress) -->
+        <div class="project-card featured">
+          <h3>Voice Agent <span class="pill pill-live">Live</span></h3>
+          <p class="tech-stack">OpenAI Realtime • WebRTC • AWS Lambda • API Gateway • DynamoDB • S3</p>
+          <p class="description">A voice agent embedded in this site. Click a button, talk, and ask about my work. It answers only from a knowledge base I wrote by hand, tags each skill by how deeply I actually know it, and says so rather than guessing when there is no source. Rate limits, spend ceilings, and tool permissions are enforced in code the model cannot reach.</p>
+          <div class="card-actions">
+            <a href="/talk" class="btn">Try it</a>
+            <a href="/talk/architecture" class="btn btn-secondary">Architecture &amp; threat model</a>
+          </div>
         </div>
+
+        <!-- DripCheck: case study, no external link -->
         <div class="project-card">
-          <h3>Two Point Oh</h3>
-          <p class="tech-stack">Python • AWS Lambda • API Gateway • AWS Amplify • DynamoDB • IAM</p>
-          <p class="description">End-to-End AWS powered app that returns the distance between two points on Earth.</p>
-          <a href="https://staging.d280r9wj89nqlp.amplifyapp.com/" class="btn" target="_blank">View App</a>
+          <h3>DripCheck Fashion Try-On <span class="pill pill-sunset">Sunset</span></h3>
+          <p class="tech-stack">AWS Lambda • API Gateway • S3 • DynamoDB • HeyBeauty API</p>
+          <p class="description">AI virtual try-on app published on the Shopify App Store. Sole engineer across backend, infrastructure, billing, and support. Re-architected the image pipeline to cut AWS costs by 99%. Sunset in 2026 once foundational image models commoditized single-purpose try-on tooling.</p>
+          <div class="card-actions">
+            <a href="/dripcheck" class="btn">Read the case study</a>
+            <a href="https://medium.com/@gchis66/how-i-lowered-my-shopify-apps-aws-bill-by-over-90-16ba159132ac" class="btn btn-secondary" target="_blank" rel="noopener">The 99% cost cut</a>
+          </div>
         </div>
+
+        <!-- Document extraction: live demos -->
         <div class="project-card">
-          <h3>Cloud Resume Challenge</h3>
-          <p class="tech-stack">JavaScript • S3 • CloudFront • Route 53 • DynamoDB • API Gateway • IaC • CI/CD</p>
-          <p class="description">A personal website deployed and managed via AWS services. Challenge can be found <a href="https://cloudresumechallenge.dev/docs/the-challenge/aws/">here</a>.</p>
-          <a href="https://github.com/gchis66/portfolio-site" class="btn" target="_blank">View Repo</a>
+          <h3>Document Extraction <span class="pill pill-live">Live</span></h3>
+          <p class="tech-stack">Vision LLMs • Next.js • Vercel • Schema validation</p>
+          <p class="description">Two systems that turn messy documents into structured data: receipts into accounting-ready CSV, and legal contracts into a reviewable risk summary. Each flagged risk has to quote the clause it came from, and code checks that the quote really exists in the document.</p>
+          <div class="card-actions">
+            <a href="https://receipt-to-csv-nine.vercel.app" class="btn" target="_blank" rel="noopener">Try receipts</a>
+            <a href="https://legal-pdf-extract.vercel.app" class="btn btn-secondary" target="_blank" rel="noopener">Try contracts</a>
+          </div>
         </div>
-        <!-- Duplicate .project-card for more projects -->
+
+        <!-- Press monitor: live demo -->
+        <div class="project-card">
+          <h3>Press Release Monitor <span class="pill pill-live">Live</span></h3>
+          <p class="tech-stack">Firecrawl • LLM summarization • Change detection • Email alerts</p>
+          <p class="description">Watches corporate newsrooms for new press releases and emails a summary when something lands. Most of the work went into the cost model: a tiered pipeline that only pays for the expensive step when a page has genuinely changed, which took a projected $749 a month down to $99.</p>
+          <div class="card-actions">
+            <a href="https://press-monitor-ten.vercel.app" class="btn" target="_blank" rel="noopener">Try it</a>
+          </div>
+        </div>
+
+        <!-- Cloud Resume Challenge: demoted to last -->
+        <div class="project-card">
+          <h3>This Site <span class="pill pill-live">Live</span></h3>
+          <p class="tech-stack">S3 • CloudFront • Route 53 • DynamoDB • API Gateway • Lambda • GitHub Actions</p>
+          <p class="description">Started as the <a href="https://cloudresumechallenge.dev/docs/the-challenge/aws/" target="_blank" rel="noopener">AWS Cloud Resume Challenge</a>. Since hardened: static deploy credentials replaced with GitHub OIDC federation, deploy role scoped to four actions, and a CloudFront response headers policy taking it from an F to an A on securityheaders.com.</p>
+          <div class="card-actions">
+            <a href="https://github.com/gchis66/portfolio-site" class="btn" target="_blank" rel="noopener">View Repo</a>
+            <a href="https://medium.com/@gchis66/i-got-an-f-on-my-own-websites-security-here-s-how-i-fixed-it-in-an-afternoon-9236c1ee62ba" class="btn btn-secondary" target="_blank" rel="noopener">How I hardened it</a>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -202,16 +333,22 @@
       <h2>Blog</h2>
       <div class="posts">
         <article class="post">
+          <h3>I got an F on my own website's security. Here's how I fixed it in an afternoon.</h3>
+          <time datetime="2026-08-04">4 Aug 2026</time>
+          <p>Replacing static AWS keys with GitHub OIDC, and going from F to A on security headers.</p>
+          <a href="https://medium.com/@gchis66/i-got-an-f-on-my-own-websites-security-here-s-how-i-fixed-it-in-an-afternoon-9236c1ee62ba" target="_blank" rel="noopener">Read more →</a>
+        </article>
+        <article class="post">
           <h3>How I lowered my Shopify app's AWS bill by 99%</h3>
           <time datetime="2025-08-27">27 Aug 2025</time>
           <p>Updating my app's architecture to reduce costs.</p>
-          <a href="https://medium.com/@gchis66/how-i-lowered-my-shopify-apps-aws-bill-by-over-90-16ba159132ac">Read more →</a>
+          <a href="https://medium.com/@gchis66/how-i-lowered-my-shopify-apps-aws-bill-by-over-90-16ba159132ac" target="_blank" rel="noopener">Read more →</a>
         </article>
         <article class="post">
           <h3>Putting theory into practice with the AWS Cloud Resume Challenge</h3>
           <time datetime="2025-08-26">26 Aug 2025</time>
           <p>Finally taking the plunge and putting my AWS knowledge to the test.</p>
-          <a href="https://medium.com/@gchis66/putting-theory-into-practice-with-the-aws-cloud-resume-challenge-80c3619b91a3">Read more →</a>
+          <a href="https://medium.com/@gchis66/putting-theory-into-practice-with-the-aws-cloud-resume-challenge-80c3619b91a3" target="_blank" rel="noopener">Read more →</a>
         </article>
         <!-- Add more posts as needed -->
       </div>
@@ -221,18 +358,20 @@
     <section id="links" class="section">
       <h2>Links &amp; Contact</h2>
       <div class="link-list">
-        <a href="https://github.com/gchis66" class="icon-link" target="_blank">GitHub</a>
-        <a href="https://www.linkedin.com/in/gregory-chisholm1/" class="icon-link" target="_blank">LinkedIn</a>
-        <a href="/Gregory_Chisholm_Resume.pdf" class="icon-link" target="_blank">Resume (PDF)</a>
+        <a href="https://github.com/gchis66" class="icon-link" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/gregory-chisholm1/" class="icon-link" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://medium.com/@gchis66" class="icon-link" target="_blank" rel="noopener">Medium</a>
+        <a href="/Gregory_Chisholm_Resume.pdf" class="icon-link" target="_blank" rel="noopener">Resume (PDF)</a>
+        <a href="mailto:gchis66@gmail.com" class="icon-link">Email</a>
       </div>
     </section>
   </main>
 
   <footer>
-    © 2025 Greg Chisholm. Built with HTML, CSS & a pinch of JS.
+    © 2026 Greg Chisholm. Built with HTML, CSS &amp; a pinch of JS.
   </footer>
 
-  
+
   <!-- ====== COUNTER + ENHANCEMENTS ====== -->
   <script>
     // Set your API Gateway invoke URL here (e.g., https://abc123.execute-api.us-east-1.amazonaws.com/count)
@@ -246,10 +385,10 @@
         if (!res.ok) throw new Error("Non-200 from API");
         const data = await res.json();
         const n = (data && typeof data.count !== 'undefined') ? data.count : null;
-        el.textContent = n === null ? "—" : n.toLocaleString();
+        el.textContent = n === null ? "..." : n.toLocaleString();
       } catch (err) {
         console.error("Counter error:", err);
-        el.textContent = "—";
+        el.textContent = "...";
       }
     }
 
@@ -257,14 +396,14 @@
     function initHamburgerMenu() {
       const hamburger = document.getElementById("hamburger");
       const navMenu = document.getElementById("navMenu");
-      
+
       if (!hamburger || !navMenu) return;
-      
+
       hamburger.addEventListener("click", () => {
         hamburger.classList.toggle("active");
         navMenu.classList.toggle("active");
       });
-      
+
       // Close menu when clicking on a nav link
       navMenu.querySelectorAll("a").forEach(link => {
         link.addEventListener("click", () => {
@@ -272,7 +411,7 @@
           navMenu.classList.remove("active");
         });
       });
-      
+
       // Close menu when clicking outside
       document.addEventListener("click", (e) => {
         if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {

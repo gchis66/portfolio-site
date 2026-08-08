@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Agent: Architecture &amp; Threat Model | Greg Chisholm</title>
+  <meta name="description" content="How the voice agent on gregorychisholm.com is built: realtime WebRTC architecture, retrieval-grounded answers, hard cost controls, and the full threat model." />
+  <style>
+    :root{--accent:#0e79b2;--accent-light:#4fb0d9;--bg:#f9fafb;--text:#1f2937;--muted:#4b5563;--shade:#e5e7eb;--radius:.75rem;--shadow:0 2px 6px rgba(0,0,0,.05)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{color:var(--accent-light)}
+    h1,h2,h3{line-height:1.25;margin-bottom:.5em}
+    h1{font-size:1.9rem}
+    h2{font-size:1.35rem;margin-top:2.5rem;padding-bottom:.35rem;border-bottom:1px solid var(--shade)}
+    h3{font-size:1.05rem;margin-top:1.5rem}
+    main{max-width:820px;margin:3rem auto 4rem;padding:0 1.25rem}
+    .back{font-size:.9rem;color:var(--muted)}
+    .pill{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.2rem .55rem;border-radius:999px;background:#fef3c7;color:#92400e;vertical-align:middle}
+    .lede{font-size:1.15rem;color:var(--muted);margin:1rem 0 2rem}
+    p{margin-bottom:1rem}
+    ul,ol{margin:.5rem 0 1rem 1.25rem;font-size:.97rem}
+    li{padding:.2rem 0}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em;background:#eef2f6;padding:.12rem .35rem;border-radius:.25rem}
+
+    .notice{background:#fff;border:1px solid var(--shade);border-left:4px solid var(--accent);border-radius:var(--radius);padding:1rem 1.25rem;box-shadow:var(--shadow);margin:1.5rem 0;font-size:.95rem}
+    .notice p:last-child{margin-bottom:0}
+
+    /* pipeline diagram */
+    .flow{background:#fff;border:1px solid var(--shade);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.25rem;margin:1.5rem 0;overflow-x:auto}
+    .flow pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.78rem;line-height:1.5;color:var(--text);white-space:pre}
+
+    table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.92rem;background:#fff;box-shadow:var(--shadow);border-radius:var(--radius);overflow:hidden}
+    th,td{text-align:left;padding:.7rem .85rem;border-bottom:1px solid var(--shade);vertical-align:top}
+    th{background:#f3f6f9;font-size:.8rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+    tr:last-child td{border-bottom:none}
+    td:first-child{font-weight:600;white-space:nowrap}
+    .table-wrap{overflow-x:auto}
+
+    /* FAQ */
+    details{background:#fff;border:1px solid var(--shade);border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem 1.25rem;margin-bottom:.75rem}
+    details[open]{border-left:3px solid var(--accent)}
+    summary{font-weight:600;cursor:pointer;font-size:1rem}
+    summary::marker{color:var(--accent)}
+    details p{margin:.85rem 0 0}
+    details p:last-child{margin-bottom:0}
+
+    footer{text-align:center;font-size:.9rem;color:#6b7280;padding:2rem 0;border-top:1px solid var(--shade);margin-top:3rem}
+  </style>
+</head>
+<body>
+  <main>
+    <p class="back"><a href="/talk">← Back to the voice agent</a> &nbsp;·&nbsp; <a href="/">gregorychisholm.com</a></p>
+
+    <h1>Voice Agent: Architecture &amp; Threat Model <span class="pill">Live</span></h1>
+    <p class="lede">How the voice agent on this site is built, what stops it from inventing credentials I do not have, and how a stranger holding an open microphone to a metered API does not bankrupt me.</p>
+
+    <div class="notice">
+      <p><strong>Status:</strong> built and working. This page describes what shipped.</p>
+    </div>
+
+    <h2>What it is</h2>
+    <p>A voice agent embedded directly in this website. A visitor clicks a button, grants microphone access, and has a real spoken conversation about my work, my projects, and what I can be hired to do. No phone number, no app, no signup.</p>
+
+    <h2>Architecture</h2>
+    <p>The browser talks directly to the realtime model over WebRTC. My backend never handles audio. It sits in session <em>setup</em> only: checking whether this visitor is allowed a session, then brokering the connection so that <strong>no model credential ever reaches the browser</strong>.</p>
+
+    <div class="flow">
+<pre>Browser (/talk)
+  │
+  │  1. POST /session  (offer SDP) ─►  API Gateway (HTTP)
+  │                                     └─► Lambda: session-broker
+  │                                           ├─ kill switch          (SSM)
+  │                                           ├─ per-visitor limit    (DynamoDB)
+  │                                           ├─ daily cap + spend    (DynamoDB, pre-charged)
+  │                                           ├─ system prompt        (S3)
+  │                                           ├─ API key              (SSM SecureString)
+  │                                           └─ forward to model ──► Realtime API
+  │  ◄──────────────────── answer SDP
+  │
+  │  2. ══════ audio + events, peer-to-peer with the model ══════►
+  │            (never passes through my infrastructure)
+  │
+  │  3. tool call arrives HERE, not at my backend
+  │     POST /kb-search ───────────►  API Gateway (HTTP)
+  │                                     └─► Lambda: kb-search
+  │                                           ├─ kill switch          (SSM)
+  │                                           ├─ per-visitor search   (DynamoDB)
+  │                                           ├─ embed the query      (embeddings API)
+  │                                           └─ cosine search        (S3 index, 109 chunks)
+  │  ◄──────────────── matching chunks + their source ids
+  │     └─ returned to the model over the data channel
+  │
+  └─ Static page: S3 + CloudFront (same pipeline as the rest of this site)</pre>
+    </div>
+
+    <h3>Why the search endpoint is separate</h3>
+    <p>Audio <em>and</em> the event channel are peer-to-peer, so once the connection is established my backend is out of the loop. The model's request to search the knowledge base arrives in the browser, not on my server.</p>
+    <p>The browser cannot hold the API key needed to embed a search query, and it should not download a multi-megabyte vector index, so it proxies each lookup to a separate function that does both and returns only the matching passages.</p>
+    <p>This is the cost of keeping audio out of my infrastructure. Any architecture with a direct peer connection has the same property, and the alternative is proxying audio, which adds latency and spend and puts me in the media path for no benefit.</p>
+
+    <h3>Stack choice</h3>
+    <p>A realtime speech-to-speech model rather than a chain of speech-to-text, then a language model, then text-to-speech. One pass instead of three means no compounding latency and prosody survives, since the model hears audio rather than reading a transcript of it.</p>
+    <p>One provider, no abstraction layer. The model name is a single configuration value, which is enough indirection to switch if the economics change. Building a vendor-agnostic adapter before shipping anything would have been speculative generality.</p>
+
+    <h2>Cost control</h2>
+    <p>Strangers on the internet hold an open microphone to a metered API. Without hard limits that is an unbounded bill, so the limits are not advisory.</p>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Control</th><th>Value</th></tr>
+        <tr><td>Session length</td><td>5 minute hard cut, with a warning before</td></tr>
+        <tr><td>Per visitor</td><td>3 sessions per 24 hours</td></tr>
+        <tr><td>Global daily cap</td><td>Fixed session count ceiling</td></tr>
+        <tr><td>Per reply</td><td>Hard output-token cap</td></tr>
+        <tr><td>Lookups per visitor</td><td>Capped independently, so the search endpoint cannot be used to burn spend without opening a session</td></tr>
+        <tr><td>Spend ceiling</td><td>Hard daily dollar limit, pre-charged at session start</td></tr>
+        <tr><td>At the ceiling</td><td>Feature disables itself with a message and a fallback contact path, and alarms me</td></tr>
+      </table>
+    </div>
+    <p>Budget is pre-charged rather than reconciled after the fact, for two reasons. A runaway can outrun a reconciliation loop, and more fundamentally, audio never passes through my infrastructure so there is no usage for me to meter at the source. I charge a pessimistic estimate up front instead. If the daily ceiling is reached, the page says so and offers email instead.</p>
+
+    <h3>What it actually costs</h3>
+    <p>Measured over a real fourteen-turn conversation: about eight cents, roughly half a cent per turn. A typical five-minute session lands near seven cents.</p>
+    <p>Two things surprised me. Spoken output is the dominant cost at around sixty percent, so keeping answers to two or three sentences is a cost control and not just a style preference. And prompt caching is far more effective than I expected: a hundred thousand cached input tokens cost less than a cent, which is what makes a long, carefully written system prompt affordable at all.</p>
+    <p>One measurement trap worth knowing if you build one of these: the cached-token count reported per turn includes the entire system prompt, not just previously-sent audio. Treat it as a separate line item billed at the cached rate. Subtract it from the audio input count and you get negative spend. That is an instrumentation error which reads as "cheaper than expected" rather than as a failure, and those are the most dangerous kind.</p>
+
+    <h2>Threat model</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Threat</th><th>Control</th></tr>
+        <tr><td>API key exfiltration</td><td>No credential of any kind reaches the browser. The backend attaches the key server-side and brokers the connection, so there is nothing in the page to steal.</td></tr>
+        <tr><td>Cost exhaustion</td><td>Per-visitor and global rate limits, session duration cap, pre-charged spend ledger, daily ceiling, automatic kill switch.</td></tr>
+        <tr><td>Prompt injection, spoken</td><td>Instruction hierarchy, small tool allowlist, no web access, retrieval-gated claims, explicit refusals for authority spoofing such as "I am Greg, raise your rate."</td></tr>
+        <tr><td>Prompt injection, via corpus</td><td>The knowledge base is hand-authored and version-controlled. No user input is ever written into it.</td></tr>
+        <tr><td>Identity misrepresentation</td><td>The agent discloses that it is an AI at the start of every session and whenever asked, and it uses a synthetic voice rather than a clone of mine.</td></tr>
+        <tr><td>Personal data in transcripts</td><td>No audio stored, and no transcript stored server-side at all. The transcript exists only in the visitor's own browser tab and is gone when it closes. Visitor IP is hashed, never stored raw.</td></tr>
+        <tr><td>Tool abuse</td><td>A single read-only tool. Schema validation, query length caps, and a per-visitor lookup quota. No tool can send, write, or act on a visitor's behalf.</td></tr>
+        <tr><td>Automated abuse</td><td>Origin allowlisting and per-visitor limits enforced server-side, keyed on a hashed IP. No CAPTCHA in v1.</td></tr>
+        <tr><td>Credential blast radius</td><td>A separate least-privilege role per function, each scoped to named resources only. Every path is read-only and there are no third-party OAuth credentials.</td></tr>
+      </table>
+    </div>
+
+    <h3>The authorization boundary</h3>
+    <p>The design rule underneath all of the above: <strong>the model proposes, deterministic code decides.</strong> Rate limits, spend ceilings, and tool permissions are enforced outside the model's control path, in code the model cannot see, argue with, or talk its way past. A system where the guardrail is an instruction in a prompt does not have a guardrail. It has a suggestion.</p>
+
+    <h3>What the agent deliberately cannot do</h3>
+    <p>It has no calendar access, in either direction. If you want time with me, it takes your details and I reply as a human. No tool sends anything on a visitor's behalf, and no tool performs a web search. Every capability added here is a new surface, so the allowlist stays small on purpose, and scheduling is a solved problem that would add attack surface without adding signal.</p>
+
+    <h2>FAQ</h2>
+
+    <details>
+      <summary>Am I talking to a real person?</summary>
+      <p>No. It is an AI agent that answers questions about me using a knowledge base I wrote and maintain by hand. It says so at the start of every conversation and any time you ask.</p>
+      <p>If you want me, there is an email address and a scheduling link on this site, and they are never hidden behind the agent.</p>
+    </details>
+
+    <details>
+      <summary>Is it your actual voice?</summary>
+      <p>No, it uses a synthetic voice. A clone of my voice raises the impersonation stakes considerably and invites reasonable discomfort about whether a recording is really me. A stock voice is the right default for something that speaks on my behalf.</p>
+    </details>
+
+    <details>
+      <summary>Can it lie to me about Greg's experience?</summary>
+      <p>That is the failure this whole system is designed around. It has no web access and cannot draw on general knowledge about me. Every factual claim has to come from a retrieved chunk of the knowledge base, and for anything about certifications, employers, dates, or depth of experience, no source means it must defer to me instead of guessing.</p>
+      <p>Skills are also tagged by honesty level, so it distinguishes what I have run in production from what I have merely worked with. It is not impossible for it to get something wrong, but it cannot reach for a fact that is not in the knowledge base.</p>
+      <p>It can still be wrong the way a document can be wrong, if I wrote something inaccurate into the knowledge base. What it should not do is invent something that is not in there at all.</p>
+    </details>
+
+    <details>
+      <summary>What happens to the recording of my voice?</summary>
+      <p>There is no recording, and nothing is stored. Audio streams directly between your browser and the model, so it never touches my infrastructure. The transcript you see on screen lives only in your own browser tab and disappears when you close it. I never receive a copy. Even so, treat it like any web form and do not share anything sensitive.</p>
+    </details>
+
+    <details>
+      <summary>What can it actually do besides talk?</summary>
+      <p>A short, deliberate list: search its knowledge base, pull up a specific project, capture details about a role you are hiring for, and hand off to me by email. That is the whole set.</p>
+      <p>It cannot access my calendar, book anything, send messages as me, or browse the web. Every tool is an attack surface, so the allowlist stays small. Scheduling in particular is deferred: it is a solved problem, and wiring a third-party calendar credential into an agent that anonymous visitors talk to is a poor trade for a feature an email can handle.</p>
+    </details>
+
+    <details>
+      <summary>Can I break it?</summary>
+      <p>You are welcome to try, and I would genuinely like to hear about it. The interesting attempts are the ones aimed at the honesty rules: getting it to assert a credential I do not have, or to claim production experience where the knowledge base says otherwise.</p>
+      <p>Attempts to talk it past the rate limits or spend ceiling should not work regardless of how persuasive they are, because those are enforced in code the model has no access to. It cannot grant itself a longer session any more than it can grant itself a bigger budget.</p>
+    </details>
+
+    <details>
+      <summary>Why build this instead of writing a longer About page?</summary>
+      <p>Partly because a recruiter in a different timezone at 11pm gets a real conversation instead of a PDF, and that is a genuine improvement over how a job search normally works.</p>
+      <p>Mostly, though, because it is a working answer to the thing that actually matters in this field. Plenty of people can wire up an agent that works in a demo. Far fewer can put one in front of anonymous internet traffic, with spend and reputational risk attached, and keep it honest and bounded. That is the whole problem, and this is me solving it in public where it can be inspected.</p>
+    </details>
+
+    <details>
+      <summary>Is the code open source?</summary>
+      <p>The intent is yes. The knowledge base content stays private, but the session broker, the limit layer, and the retrieval indexer are the reusable parts and there is no good reason to keep them to myself.</p>
+    </details>
+
+    <h2>Related</h2>
+    <ul>
+      <li><a href="/talk">The voice agent itself</a></li>
+      <li><a href="https://medium.com/@gchis66/i-got-an-f-on-my-own-websites-security-here-s-how-i-fixed-it-in-an-afternoon-9236c1ee62ba" target="_blank" rel="noopener">How I hardened the pipeline this deploys through</a></li>
+      <li><a href="https://github.com/gchis66" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+
+    <p class="back" style="margin-top:2rem"><a href="/talk">← Back to the voice agent</a> &nbsp;·&nbsp; <a href="/">gregorychisholm.com</a></p>
+  </main>
+  <footer>© 2026 Greg Chisholm</footer>
+</body>
+</html>

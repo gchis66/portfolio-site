@@ -1,0 +1,120 @@
+# ---------------------------------------------------------------------------
+# .gitignore — gchis66/portfolio-site
+#
+# This repo is PUBLIC. Anything committed here is world-readable forever, even
+# after deletion, because it stays in git history.
+#
+# Intent: `git add -A` should be safe to run without thinking. Everything the
+# site and the voice agent need to run is tracked. Everything else, especially
+# operational notes containing infrastructure identifiers, is not.
+# ---------------------------------------------------------------------------
+
+
+# === OPERATIONAL RUNBOOKS =================================================
+# Click-by-click AWS console instructions. These contain the account ID,
+# CloudFront distribution ID, API Gateway IDs, IAM role names, and SSM
+# parameter paths. None of it is a credential, but together it is a map of the
+# infrastructure and there is no reason to publish it.
+RUNBOOK-*.md
+
+
+# === AMBASSADOR: PLANNING AND KNOWLEDGE BASE ==============================
+# The spec is a design document with resource identifiers, cost figures, and
+# threat-model notes. The public version of this is prod/talk/architecture.
+ambassador/SPEC.md
+
+# The knowledge base is the agent's source material: skills with honesty tags,
+# comp band, notice period, employment status, boundary rules, and refusal
+# wording. Publishing it hands anyone the exact instructions the agent follows,
+# including what it is told to decline and how. It also contains the internal
+# rationale for what to say about the layoff.
+ambassador/kb/
+
+# Build scripts for the index and prompt. Not needed by anything in prod, and
+# they encode the chunking and alias tuning.
+ambassador/scripts/
+
+# Component README stubs and the infra resource inventory (invoke URLs,
+# resource names, provisioning state).
+ambassador/infra/
+ambassador/**/README.md
+
+
+# === RESUME SOURCE ========================================================
+# resume/ is the HTML source and a duplicate PDF. The deployed copy lives at
+# prod/Gregory_Chisholm_Resume.pdf, which IS tracked. Keeping the source out
+# avoids a second copy drifting out of sync.
+resume/
+
+
+# === DRAFTS AND NOTES =====================================================
+# Blog drafts are published on Medium; the markdown source is not needed here.
+blog/
+
+# Planning docs, wherever they land.
+positioning-updates.md
+*-notes.md
+*-draft.md
+TODO.md
+NOTES.md
+
+
+# === SECRETS: NEVER COMMIT ================================================
+# Nothing below should ever exist in this repo. Listed defensively so an
+# accidental `git add -A` cannot pick one up.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*credentials*
+*secret*
+*.tfstate
+*.tfstate.*
+.terraform/
+aws-exports.js
+
+
+# === BUILD ARTIFACTS AND DEPENDENCIES =====================================
+node_modules/
+package-lock.json
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+*.zip
+
+
+# === EDITOR AND OS ========================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+.hermes/
+
+
+# ---------------------------------------------------------------------------
+# WHAT STAYS TRACKED, AND WHY
+#
+#   prod/                      The deployed site. S3 syncs from here with
+#                              --delete, so anything missing gets removed from
+#                              the live bucket.
+#   lambda/index.mjs           VisitorCountFunc source.
+#   ambassador/lambda/**/*.mjs Session broker and kb-search source. Worth
+#                              publishing: it is the interesting engineering,
+#                              it holds no credentials (the key is read from
+#                              SSM at runtime), and it is referenced from the
+#                              public architecture page.
+#   .github/workflows/         Deploy pipeline. Uses OIDC, no static keys.
+#
+# ONE THING TO FIX SEPARATELY: RUNBOOK-oidc.md and ambassador/SPEC.md are
+# already in git history from earlier commits. Adding them here stops FUTURE
+# commits but does not remove what is already published. See the note in
+# positioning-updates.md.
+# ---------------------------------------------------------------------------

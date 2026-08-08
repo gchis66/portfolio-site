@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="900" height="500" role="img" aria-labelledby="t d">
+  <title id="t">DripCheck architecture</title>
+  <desc id="d">A shopper on a Shopify storefront requests a virtual try-on. The request goes through API Gateway to a Lambda orchestrator, which calls the HeyBeauty generative try-on API, stores images in S3, and meters usage in DynamoDB. Merchants read analytics through the same gateway, and billing is handled by the Shopify Billing API.</desc>
+
+  <defs>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#eef2f7" stroke-width="1"/>
+    </pattern>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arwB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#0e79b2"/>
+    </marker>
+    <style>
+      .nm{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#1f2937}
+      .sb{font:11px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#64748b}
+      .al{font:10px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#64748b}
+      .bl{font:600 10px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#94a3b8;letter-spacing:.08em}
+      .lg{font:11px system-ui,-apple-system,sans-serif;fill:#64748b}
+    </style>
+  </defs>
+
+  <rect width="900" height="500" fill="#fbfdff"/>
+  <rect width="900" height="500" fill="url(#grid)"/>
+
+  <!-- ============ AWS boundary ============ -->
+  <rect x="208" y="52" width="454" height="386" rx="12" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="8,5"/>
+  <text x="224" y="74" class="bl">AWS · us-east-1</text>
+
+  <!-- ============ arrows (drawn first, sit behind boxes) ============ -->
+  <!-- shopper -> api gw -->
+  <path d="M 186 126 H 240" fill="none" stroke="#0e79b2" stroke-width="1.8" marker-end="url(#arwB)"/>
+  <!-- merchant -> api gw -->
+  <path d="M 186 272 H 200 V 146 H 240" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw)"/>
+  <!-- api gw -> lambda -->
+  <path d="M 400 126 H 440" fill="none" stroke="#0e79b2" stroke-width="1.8" marker-end="url(#arwB)"/>
+  <!-- lambda -> heybeauty -->
+  <path d="M 600 126 H 700" fill="none" stroke="#0e79b2" stroke-width="1.8" marker-end="url(#arwB)"/>
+  <!-- lambda -> s3 -->
+  <path d="M 472 158 V 300 H 322 V 348" fill="none" stroke="#0e79b2" stroke-width="1.8" marker-end="url(#arwB)"/>
+  <!-- lambda -> dynamodb -->
+  <path d="M 528 158 V 348" fill="none" stroke="#0e79b2" stroke-width="1.8" marker-end="url(#arwB)"/>
+  <!-- lambda -> billing -->
+  <path d="M 578 158 V 272 H 700" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arw)"/>
+
+  <!-- ============ external: shopper ============ -->
+  <rect x="26" y="95" width="160" height="62" rx="6" fill="#f8fafc"/>
+  <rect x="26" y="95" width="160" height="62" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="106" y="120" class="nm" text-anchor="middle">Shopper</text>
+  <text x="106" y="138" class="sb" text-anchor="middle">Shopify storefront</text>
+  <text x="106" y="151" class="sb" text-anchor="middle">uploads a photo</text>
+
+  <!-- ============ external: merchant ============ -->
+  <rect x="26" y="241" width="160" height="62" rx="6" fill="#f8fafc"/>
+  <rect x="26" y="241" width="160" height="62" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="106" y="266" class="nm" text-anchor="middle">Merchant</text>
+  <text x="106" y="284" class="sb" text-anchor="middle">embedded admin</text>
+  <text x="106" y="297" class="sb" text-anchor="middle">analytics</text>
+
+  <!-- ============ api gateway ============ -->
+  <rect x="240" y="95" width="160" height="62" rx="6" fill="#fff"/>
+  <rect x="240" y="95" width="160" height="62" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="320" y="120" class="nm" text-anchor="middle">API Gateway</text>
+  <text x="320" y="138" class="sb" text-anchor="middle">HTTP · CORS</text>
+  <text x="320" y="151" class="sb" text-anchor="middle">HMAC verify</text>
+
+  <!-- ============ lambda ============ -->
+  <rect x="440" y="95" width="160" height="62" rx="6" fill="#fff"/>
+  <rect x="440" y="95" width="160" height="62" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+  <text x="520" y="120" class="nm" text-anchor="middle">Lambda</text>
+  <text x="520" y="138" class="sb" text-anchor="middle">Node.js orchestrator</text>
+  <text x="520" y="151" class="sb" text-anchor="middle">async try-on job</text>
+
+  <!-- ============ s3 ============ -->
+  <rect x="242" y="348" width="160" height="62" rx="6" fill="#fff"/>
+  <rect x="242" y="348" width="160" height="62" rx="6" fill="#eff6ff" stroke="#0e79b2" stroke-width="1.5"/>
+  <text x="322" y="373" class="nm" text-anchor="middle">S3</text>
+  <text x="322" y="391" class="sb" text-anchor="middle">source + result</text>
+  <text x="322" y="404" class="sb" text-anchor="middle">images · lifecycle TTL</text>
+
+  <!-- ============ dynamodb ============ -->
+  <rect x="448" y="348" width="160" height="62" rx="6" fill="#fff"/>
+  <rect x="448" y="348" width="160" height="62" rx="6" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="528" y="373" class="nm" text-anchor="middle">DynamoDB</text>
+  <text x="528" y="391" class="sb" text-anchor="middle">per-store metering</text>
+  <text x="528" y="404" class="sb" text-anchor="middle">quota enforcement</text>
+
+  <!-- ============ external: heybeauty ============ -->
+  <rect x="700" y="95" width="172" height="62" rx="6" fill="#f8fafc"/>
+  <rect x="700" y="95" width="172" height="62" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="786" y="120" class="nm" text-anchor="middle">HeyBeauty API</text>
+  <text x="786" y="138" class="sb" text-anchor="middle">generative try-on</text>
+  <text x="786" y="151" class="sb" text-anchor="middle">billed per inference</text>
+
+  <!-- ============ external: shopify billing ============ -->
+  <rect x="700" y="241" width="172" height="62" rx="6" fill="#f8fafc"/>
+  <rect x="700" y="241" width="172" height="62" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="786" y="266" class="nm" text-anchor="middle">Shopify Billing API</text>
+  <text x="786" y="284" class="sb" text-anchor="middle">$9.99/mo + $0.13</text>
+  <text x="786" y="297" class="sb" text-anchor="middle">per overage try-on</text>
+
+  <!-- ============ arrow labels ============ -->
+  <text x="213" y="118" class="al" text-anchor="middle">try on</text>
+  <text x="420" y="118" class="al" text-anchor="middle">invoke</text>
+  <text x="650" y="118" class="al" text-anchor="middle">generate</text>
+  <text x="398" y="293" class="al" text-anchor="middle">put / sign</text>
+  <text x="518" y="250" class="al" text-anchor="end">meter</text>
+  <text x="640" y="265" class="al" text-anchor="middle">usage charge</text>
+
+  <!-- ============ legend ============ -->
+  <g transform="translate(26,458)">
+    <rect x="0" y="0" width="13" height="13" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="20" y="11" class="lg">External</text>
+    <rect x="96" y="0" width="13" height="13" rx="3" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="116" y="11" class="lg">Edge</text>
+    <rect x="176" y="0" width="13" height="13" rx="3" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="196" y="11" class="lg">Compute</text>
+    <rect x="280" y="0" width="13" height="13" rx="3" fill="#eff6ff" stroke="#0e79b2" stroke-width="1.5"/>
+    <text x="300" y="11" class="lg">Storage</text>
+    <rect x="378" y="0" width="13" height="13" rx="3" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="398" y="11" class="lg">Data</text>
+    <path d="M 460 7 H 492" fill="none" stroke="#0e79b2" stroke-width="1.8"/>
+    <text x="500" y="11" class="lg">Try-on request path</text>
+    <path d="M 646 7 H 678" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,4"/>
+    <text x="686" y="11" class="lg">Admin / billing</text>
+  </g>
+</svg>
